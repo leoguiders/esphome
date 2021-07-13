@@ -416,6 +416,94 @@ int WaveshareEPaperTypeA::idle_timeout_() {
 }
 
 // ========================================================
+//               1.54in Type B v2 (b/w/r)
+// Datasheet:
+//  - https://v4.cecdn.yun300.cn/100001_1909185148/GDEH0154Z90-0111.pdf (Display)
+//  - https://v4.cecdn.yun300.cn/100001_1909185148/SSD1681%20V0.13%20Spec.pdf
+// ========================================================
+
+void WaveshareEPaper1P54InBV2::initialize() {
+  // EPD hardware init start
+  this->reset_();
+
+  this->wait_until_idle_();
+  this->command(0x12);  // SWRESET
+  this->wait_until_idle_();
+
+  this->command(0x01);  // Driver output control
+  this->data(0xC7);
+  this->data(0x00);
+  this->data(0x00);
+
+  this->command(0x11);  // data entry mode
+  this->data(0x03);
+
+  this->command(0x44);  // set Ram-X address start/end position
+  this->data(0x00);     // start
+  this->data(0x18);     // end 0x18-->(24+1)*8=200
+
+  this->command(0x45);  // set Ram-Y address start/end position
+  this->data(0x00);     // start
+  this->data(0x00);     
+  this->data(0xC7);     // end 0xC7-->(199+1)=200
+  this->data(0x00);
+
+  this->command(0x3C);  // BorderWavefrom
+  this->data(0x05);
+
+  this->command(0x18);  // Read built-in temperature sensor
+  this->data(0x80);
+
+  this->command(0x4E);  // set RAM x address count to 0;
+  this->data(0x00);
+  this->command(0x4F);  // set RAM y address count to 0X199;
+  this->data(0x00);
+  this->data(0x00);
+  this->wait_until_idle_();
+  // EPD hardware init end
+}
+void HOT WaveshareEPaper1P54InBV2::display() {
+  // COMMAND DATA START TRANSMISSION 1 (B/W data)
+  this->command(0x24);
+  delay(2);
+  this->start_data_();
+  this->write_array(this->buffer_, this->get_buffer_length_());
+  this->end_data_();
+  delay(2);
+
+  // COMMAND DATA START TRANSMISSION 2 (RED data)
+  this->command(0x26);
+  delay(2);
+  this->start_data_();
+  for (uint32_t i = 0; i < this->get_buffer_length_(); ++i) {
+    if (this->buffer_[i] == 
+    this->write_byte(0x00);
+  }
+  this->end_data_();
+  delay(2);
+
+  // COMMAND DISPLAY REFRESH
+  this->command(0x22); // Display Update Control
+  this->data(0xF7);
+  this->command(0x20); // Activate Display Update Sequence
+  delay(2);
+  this->wait_until_idle_();
+
+  this->deep_sleep();
+}
+
+int WaveshareEPaper1P54InBV2::get_width_internal() { return 200; }
+int WaveshareEPaper1P54InBV2::get_height_internal() { return 200; }
+void WaveshareEPaper1P54InBV2::dump_config() {
+  LOG_DISPLAY("", "Waveshare E-Paper", this);
+  ESP_LOGCONFIG(TAG, "  Model: 1.54in (B) V2");
+  LOG_PIN("  Reset Pin: ", this->reset_pin_);
+  LOG_PIN("  DC Pin: ", this->dc_pin_);
+  LOG_PIN("  Busy Pin: ", this->busy_pin_);
+  LOG_UPDATE_INTERVAL(this);
+}
+
+// ========================================================
 //                          Type B
 // ========================================================
 // Datasheet:

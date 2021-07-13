@@ -119,6 +119,30 @@ enum WaveshareEPaperTypeBModel {
   WAVESHARE_EPAPER_7_5_INV2,
 };
 
+class WaveshareEPaper1P54InBV2 : public WaveshareEPaper {
+ public:
+  void initialize() override;
+
+  void display() override;
+
+  void dump_config() override;
+
+  void deep_sleep() override {
+    // COMMAND DEEP SLEEP
+    this->command(0x10);
+    this->data(0x01);  // check byte
+  }
+
+ protected:
+  int get_width_internal() override;
+
+  int get_height_internal() override;
+
+  // full refresh is 8s
+  int idle_timeout_() override { return 10000; }
+};
+
+
 class WaveshareEPaper2P7In : public WaveshareEPaper {
  public:
   void initialize() override;
