@@ -476,7 +476,6 @@ void HOT WaveshareEPaper1P54InBV2::display() {
   delay(2);
   this->start_data_();
   for (uint32_t i = 0; i < this->get_buffer_length_(); ++i) {
-    if (this->buffer_[i] == 
     this->write_byte(0x00);
   }
   this->end_data_();
